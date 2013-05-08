@@ -6,11 +6,11 @@ import psycopg2
 
 
 def nnt(graph,startNode):
-  #Compute the nearest-neighbour-tour.
+  # Compute the nearest-neighbour-tour.
   #
-  #graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
-  #startNode: the node where the tour begins and ends.
-  #returns a list containing the nearest-neighbour-tour.
+  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # startNode: the node where the tour begins and ends.
+  # returns a list containing the nearest-neighbour-tour.
 
   tour = [startNode]
   remNodes = range(len(graph)) # remaining nodes
@@ -26,11 +26,11 @@ def nnt(graph,startNode):
 
 
 def gtl(graph,tour):
-  #Get the length of a tour.
+  # Get the length of a tour.
   #
-  #graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
-  #tour: list containing the tour.
-  #returns the length of the tour.
+  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # tour: list containing the tour.
+  # returns the length of the tour.
 
   length = 0
   for i in range(len(tour)-1):
@@ -39,12 +39,12 @@ def gtl(graph,tour):
 
 
 def checkForBestTour(graph, tours, oldBestTour):
-  #Check for new best tour.
+  # Check for new best tour.
   #
-  #graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
-  #tours: list of lists (list of tours).
-  #oldBestTour: list of nodes (the best tour so far).
-  #returns a list containing the best tour (might be oldBestTour).
+  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # tours: list of lists (list of tours).
+  # oldBestTour: list of nodes (the best tour so far).
+  # returns a list containing the best tour (might be oldBestTour).
 
   best = float('inf')
   bestT = []
@@ -64,12 +64,12 @@ def checkForBestTour(graph, tours, oldBestTour):
 
 
 def isEdgeOfBestTour(bestTour, r, s):
-  #check if (r,s) is an edge of the best tour.
+  # check if (r,s) is an edge of the best tour.
   #
-  #bestTour: list containing the nodes of the best tour.
-  #r: first node.
-  #s: second node.
-  #returns true if (r,s) is an edge of bestTour, false else.
+  # bestTour: list containing the nodes of the best tour.
+  # r: first node.
+  # s: second node.
+  # returns true if (r,s) is an edge of bestTour, false else.
 
   edges = []
 
@@ -80,22 +80,22 @@ def isEdgeOfBestTour(bestTour, r, s):
 
 
 def tau0(graph):
-  #tau0 is (number of nodes * length of nearestNeighbourTour)^-1, default value for various formulas
+  # tau0 is (number of nodes * length of nearestNeighbourTour)^-1, default value for various formulas
   #
-  #graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
-  #returns the value of tau0.
+  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # returns the value of tau0.
 
   return 1./(len(graph)*gtl(graph,nnt(graph,0)))
 
 
 def haversine(lat0, lon0, lat1, lon1):
-  #calculate the distance between two points on earth (inaccurate, no height differences?)
+  # calculate the distance between two points on earth (inaccurate, no height differences?)
   #
-  #lat0: latitude of the first point.
-  #lon0: longitude of the first point.
-  #lat1: latitude of the second point.
-  #lon1: longitude of the second point.
-  #returns distance between the two points in km.
+  # lat0: latitude of the first point.
+  # lon0: longitude of the first point.
+  # lat1: latitude of the second point.
+  # lon1: longitude of the second point.
+  # returns distance between the two points in km.
 
   R = 6371 # radius earth
   dLat = lat1-lat0
@@ -106,11 +106,11 @@ def haversine(lat0, lon0, lat1, lon1):
 
 
 def getDistance(a,b):
-  #Calculate the distance between two openstreetmap node-indices.
+  # Calculate the distance between two openstreetmap node-indices.
   #
-  #a: first osm index.
-  #b: second osm index.
-  #returns the distance between a and b (unit?)
+  # a: first osm index.
+  # b: second osm index.
+  # returns the distance between a and b (unit?)
 
   print 'From: ', a
   print 'To: ', b
@@ -129,11 +129,11 @@ def getDistance(a,b):
 
 
 def probfunc(l):
-  #determine an index, where each index has the probability of being picked of the value of the
-  #array at that index.
+  # determine an index, where each index has the probability of being picked of the value of the
+  # array at that index.
   #
-  #l: list, where sum(l) = 1, e.g. [0.5, 0.2, 0.1, 0.2].
-  #returns an index based on probability.
+  # l: list, where sum(l) = 1, e.g. [0.5, 0.2, 0.1, 0.2].
+  # returns an index based on probability.
 
   r = random.random() # get random number
   for i in range(0,len(l)):
@@ -152,11 +152,11 @@ def probfunc(l):
 
 
 def localUpdatingRule(pheromone, lastNode, currentNode, tau0val): 
-  #update an edge using the local updating rule.
+  # update an edge using the local updating rule.
   #
-  #pheromone: list containing pheromone values.
-  #lastNode: the previous node of the ant.
-  #currentNode: the node where the ant is now.
+  # pheromone: list containing pheromone values.
+  # lastNode: the previous node of the ant.
+  # currentNode: the node where the ant is now.
 
   rho = 0.1
   nval = (1-rho)*pheromone[lastNode][currentNode] + rho*tau0val
@@ -164,11 +164,11 @@ def localUpdatingRule(pheromone, lastNode, currentNode, tau0val):
 
 
 def globalUpdatingRule(graph, pheromone, bestTour):
-  #Update the whole graph using the global updating rule.
+  # Update the whole graph using the global updating rule.
   #
-  #graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
-  #pheromone: 2D array with numberOfNodes rows and columns and the pheromoneamount of the edges as values.
-  #bestTour: array containing the best tour so far
+  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # pheromone: 2D array with numberOfNodes rows and columns and the pheromoneamount of the edges as values.
+  # bestTour: array containing the best tour so far
 
   for r in range(len(graph)):
     for s in range(len(graph)):
@@ -180,12 +180,12 @@ def globalUpdatingRule(graph, pheromone, bestTour):
 
 
 def stateTransitionRule(graph, pheromone, currentNode, remaining):
-  #Choose the next node.
+  # Choose the next node.
   #
-  #graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
-  #pheromone: 2D array with numberOfNodes rows and columns and the pheromoneamount of the edges as values.
-  #currentNode: the current position of the ant.
-  #returns the next node.
+  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # pheromone: 2D array with numberOfNodes rows and columns and the pheromoneamount of the edges as values.
+  # currentNode: the current position of the ant.
+  # returns the next node.
 
   q0 = 0.9
   beta = 2
@@ -217,12 +217,12 @@ def stateTransitionRule(graph, pheromone, currentNode, remaining):
 
 
 def chooseNext(graph, pheromone, remaining, tours):
-  #For every ant: choose next node
+  # For every ant: choose next node
   #
-  #graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
-  #pheromone: 2D array with numberOfNodes rows and columns and the pheromoneamount of the edges as values.
-  #remaining: list of remaining nodes
-  #tours: list of tours
+  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # pheromone: 2D array with numberOfNodes rows and columns and the pheromoneamount of the edges as values.
+  # remaining: list of remaining nodes
+  # tours: list of tours
 
   ant = 0 # current ant
   if (len(tours[ant]) == numNodes): # all nodes visited
@@ -240,12 +240,12 @@ def chooseNext(graph, pheromone, remaining, tours):
 
 
 def reset(remaining, tours, nodes, ants):
-  #Reset remaining nodes and generated tours
+  # Reset remaining nodes and generated tours
   #
-  #remaining: list containing the remaining nodes for every ant
-  #tours: list containing the tour of every ant
-  #nodes: list of nodes
-  #ants: number of ants
+  # remaining: list containing the remaining nodes for every ant
+  # tours: list containing the tour of every ant
+  # nodes: list of nodes
+  # ants: number of ants
 
   del remaining[:]
   for i in range(len(nodes)):
@@ -257,12 +257,12 @@ def reset(remaining, tours, nodes, ants):
 
 
 def positionAnts(ants, tours, numNodes, remaining):
-  #Determine the start nodes of the ants.
+  # Determine the start nodes of the ants.
   #
-  #ants: number of ants.
-  #tours: list of tours
-  #numNodes: number of nodes.
-  #remaining: unvisited nodes
+  # ants: number of ants.
+  # tours: list of tours
+  # numNodes: number of nodes.
+  # remaining: unvisited nodes
 
   pos = range(numNodes)
   for ant in range(ants):
@@ -273,15 +273,19 @@ def positionAnts(ants, tours, numNodes, remaining):
 
 
 def addDepots(v, graph):
+  # add v depots to the graph
+  # vertex 0 gets replaced by those depots
+  # distance between depots is inf
+
   l = []
-  for g in graph: # l = graph
+  for g in graph: # create copy of graph
     l.append(g[:])
-  l.pop(0)
+  l.pop(0) # remove adjacency list 0, the depots together form list 0
   for i in l:
     for j in range(v-1):
-      i.insert(0,i[0])
+      i.insert(0,i[0]) # insert distance to depots 0,1,...
   for i in range(v):
-    tmp = [float('inf') for j in range(v)] # distance between depots
+    tmp = [float('inf') for j in range(v)] # distance between depots if inf
     for j in range(1,len(graph)):
       tmp.append(graph[0][j]) # append length from depot to customer
     l.insert(0, tmp)
@@ -353,5 +357,6 @@ if __name__ == '__main__':
   #  print 'length of best tour: ', gtl(graph, bestTour)
   #  print 'length of nnt: ', gtl(graph, nnt(graph, 0))
 
-  graph = addDepots(numNodes-1, graph)
+  #graph = addDepots(numNodes-1, graph)
+  graph = addDepots(1, graph)
   print 'nnt: ', nnt(graph, 0)
