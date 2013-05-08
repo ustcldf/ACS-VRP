@@ -272,6 +272,29 @@ def positionAnts(ants, tours, numNodes, remaining):
     pos.remove(p)
 
 
+def addDepots(v, graph):
+  l = []
+  for g in graph: # l = graph
+    l.append(g[:])
+  l.pop(0)
+  for i in l:
+    for j in range(v-1):
+      i.insert(0,i[0])
+  for i in range(v):
+    tmp = [float('inf') for j in range(v)] # distance between depots
+    for j in range(1,len(graph)):
+      tmp.append(graph[0][j]) # append length from depot to customer
+    l.insert(0, tmp)
+  return l
+
+def addDepots2(v, graph):
+  l = [ [] for i in range(len(graph)+v-1) ]
+  print l
+  for i in len(graph):
+    for j in len(graph[i]):
+      if (i <= v):
+        if (j <= v):
+          None
 
 if __name__ == '__main__':
 
@@ -299,24 +322,24 @@ if __name__ == '__main__':
   numNodes = len(graph)
 
   # initial pheromone amount
-  tau0val = tau0(graph)
+  #tau0val = tau0(graph)
 
   # pheromone array
-  pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ]
+  #pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ]
 
   # number of ants
-  ants = 10
+  #ants = 10
 
   # list of remaining nodes
-  remaining = [ nodes[:] for i in range(ants) ]
+  #remaining = [ nodes[:] for i in range(ants) ]
 
   # tours generated
-  tours = [ [] for i in range(ants) ]
+  #tours = [ [] for i in range(ants) ]
 
   # the best tour
-  bestTour = []
+  #bestTour = []
 
-  positionAnts(ants, tours, numNodes, remaining)
+  #positionAnts(ants, tours, numNodes, remaining)
 
   #for tmp in range(2):
   #  for count in range(1000):
@@ -330,5 +353,5 @@ if __name__ == '__main__':
   #  print 'length of best tour: ', gtl(graph, bestTour)
   #  print 'length of nnt: ', gtl(graph, nnt(graph, 0))
 
-  graph2 = [[0, float('inf'), float('inf'), 2, 4, 1],[float('inf'), 0, float('inf'), 2, 4, 1],[float('inf'), float('inf'), 0, 2, 4, 1],[2, 2, 2, 0, 3, 5],[4, 4, 4, 3, 0, 3],[1, 1, 1, 5, 3, 0]]
-  print 'nnt: ', nnt(graph2, 0)
+  graph = addDepots(numNodes-1, graph)
+  print 'nnt: ', nnt(graph, 0)
