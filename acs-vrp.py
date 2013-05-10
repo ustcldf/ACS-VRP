@@ -179,12 +179,14 @@ def globalUpdatingRule(graph, pheromone, bestTour):
       pheromone[r][s] = nval # (r,s) != (s,r) ???
 
 
-def stateTransitionRule(graph, pheromone, currentNode, remaining):
+def stateTransitionRule(graph, pheromone, currentNode, remaining, depots):
   # Choose the next node.
   #
   # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
   # pheromone: 2D array with numberOfNodes rows and columns and the pheromoneamount of the edges as values.
   # currentNode: the current position of the ant.
+  # remaining: not yet visited nodes
+  # depots: id of depots
   # returns the next node.
 
   q0 = 0.9
@@ -193,30 +195,44 @@ def stateTransitionRule(graph, pheromone, currentNode, remaining):
 
   if (q <= q0):
     maxval = 0
+    tmp = 0
     for i in remaining:
-      tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
+      if (i in depots and currentNode in depots):
+        tmp = pheromone[currentNode][i] / 1000000 # TODO value?
+      else:
+        tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
       if ( tmp >= maxval ):
         maxval = tmp
         s = i
   else:
     prob = [ 0 for k in range(len(graph)) ]
     sumval = 0
+    tmp = 0
     for i in remaining:
-      tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
+      if (i in depots and currentNode in depots):
+        tmp = pheromone[currentNode][i] / 1000000 # TODO value?
+      else:
+        tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
       sumval += tmp
       if (sumval == 0):
         print 'sumval == 0'
 
     for i in remaining:
-      tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
-      prob[i] = (tmp / sumval)
+      if (i in depots and currentNode in depots):
+        tmp = pheromone[currentNode][i] / 1000000 # TODO value?
+      else:
+        tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
+      if (sumval != 0):
+        prob[i] = (tmp / sumval)
+      else:
+        prob[i] = 0
 
     s = probfunc(prob)
 
   return s
 
 
-def chooseNext(graph, pheromone, remaining, tours):
+def chooseNext(graph, pheromone, remaining, tours, depots):
   # For every ant: choose next node
   #
   # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
@@ -232,7 +248,7 @@ def chooseNext(graph, pheromone, remaining, tours):
   else:
     for a in tours: # for every ant tour
       oldPos = a[len(a)-1]
-      newPos = stateTransitionRule(graph, pheromone, oldPos, remaining[ant])
+      newPos = stateTransitionRule(graph, pheromone, oldPos, remaining[ant], depots)
       localUpdatingRule(pheromone, oldPos, newPos, tau0(graph))
       a.append(newPos)
       remaining[ant].remove(newPos)
@@ -272,12 +288,23 @@ def positionAnts(ants, tours, numNodes, remaining):
     pos.remove(p)
 
 
-def addDepots(v, graph):
-  # add v depots to the graph
-  # vertex 0 gets replaced by those depots
-  # distance between depots is inf
+def addDepots(v, graph, nodes, depots):
+  # add v depots to the graph vertex 0 gets replaced by those depots distance between depots is 0
+  #
+  # v: number of vehicles
+  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # nodes: list of nodes, gets updated
+  # depots: list of depots, gets updated
+  # returns updated graph
 
   l = []
+  x = nodes[len(nodes)-1] # last entry in nodes
+
+  for i in range(v-1):
+    x = x+1
+    nodes.append(x) # append new node
+  for i in range(v):
+    depots.append(i) # append new depot
   for g in graph: # create copy of graph
     l.append(g[:])
   l.pop(0) # remove adjacency list 0, the depots together form list 0
@@ -285,20 +312,12 @@ def addDepots(v, graph):
     for j in range(v-1):
       i.insert(0,i[0]) # insert distance to depots 0,1,...
   for i in range(v):
-    tmp = [float('inf') for j in range(v)] # distance between depots if inf
+    tmp = [0 for j in range(v)] # distance between depots if 0
     for j in range(1,len(graph)):
       tmp.append(graph[0][j]) # append length from depot to customer
     l.insert(0, tmp)
   return l
 
-def addDepots2(v, graph):
-  l = [ [] for i in range(len(graph)+v-1) ]
-  print l
-  for i in len(graph):
-    for j in len(graph[i]):
-      if (i <= v):
-        if (j <= v):
-          None
 
 if __name__ == '__main__':
 
@@ -308,6 +327,9 @@ if __name__ == '__main__':
 
   # example non-osm-nodes
   nodes = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+
+  # list of depots
+  depots = []
 
   # matrix with <numberOfNodes> rows and columns and osm-distances as values
   #graph = [ [ getDistance(i,j) for j in nodes ] for i in nodes ]
@@ -322,41 +344,39 @@ if __name__ == '__main__':
   1, 6, 0, 20, 15],[6, 8, 27, 14, 30, 10, 5, 3, 21, 17, 26, 20, 0, 18],[20, 21, 5, 20, 7, 33, 13, 19,
   18, 4, 8, 15, 18, 0]]
 
+  graph = addDepots(len(graph)-1, graph, nodes, depots)
+
   # number of nodes
   numNodes = len(graph)
 
   # initial pheromone amount
-  #tau0val = tau0(graph)
+  tau0val = tau0(graph)
 
   # pheromone array
-  #pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ]
+  pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ]
 
   # number of ants
-  #ants = 10
+  ants = 10
 
   # list of remaining nodes
-  #remaining = [ nodes[:] for i in range(ants) ]
+  remaining = [ nodes[:] for i in range(ants) ]
 
   # tours generated
-  #tours = [ [] for i in range(ants) ]
+  tours = [ [] for i in range(ants) ]
 
   # the best tour
-  #bestTour = []
+  bestTour = []
 
-  #positionAnts(ants, tours, numNodes, remaining)
+  positionAnts(ants, tours, numNodes, remaining)
 
-  #for tmp in range(2):
-  #  for count in range(1000):
-  #    for i in range(numNodes):
-  #      chooseNext(graph, pheromone, remaining, tours)
-  #    bestTour = checkForBestTour(graph, tours, bestTour)
-  #    globalUpdatingRule(graph, pheromone, bestTour)
-  #    reset(remaining, tours, nodes, ants)
-  #    positionAnts(ants, tours, numNodes, remaining)
-  #  print 'best tour: ', bestTour
-  #  print 'length of best tour: ', gtl(graph, bestTour)
-  #  print 'length of nnt: ', gtl(graph, nnt(graph, 0))
-
-  #graph = addDepots(numNodes-1, graph)
-  graph = addDepots(1, graph)
-  print 'nnt: ', nnt(graph, 0)
+  for tmp in range(2):
+    for count in range(1000):
+      for i in range(numNodes):
+        chooseNext(graph, pheromone, remaining, tours, depots)
+      bestTour = checkForBestTour(graph, tours, bestTour)
+      globalUpdatingRule(graph, pheromone, bestTour)
+      reset(remaining, tours, nodes, ants)
+      positionAnts(ants, tours, numNodes, remaining)
+    print 'best tour: ', bestTour
+    print 'length of best tour: ', gtl(graph, bestTour)
+    print 'length of nnt: ', gtl(graph, nnt(graph, 0))
