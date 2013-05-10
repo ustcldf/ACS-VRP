@@ -143,7 +143,6 @@ def probfunc(l):
   print 'nothing found in probfunc' # list empty?
   print l
   print 'sum = ', sum(l)
-  print
   if (sum(l) == 0): # items in list of probabilities all 0?
     print 'sum(l) = 0'
   for i in range(0,len(l)): # return the first non-zero element
@@ -198,7 +197,7 @@ def stateTransitionRule(graph, pheromone, currentNode, remaining, depots):
     tmp = 0
     for i in remaining:
       if (i in depots and currentNode in depots):
-        tmp = pheromone[currentNode][i] / 1000000 # TODO value?
+        tmp = pheromone[currentNode][i] / 1 # TODO value?
       else:
         tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
       if ( tmp >= maxval ):
@@ -210,22 +209,25 @@ def stateTransitionRule(graph, pheromone, currentNode, remaining, depots):
     tmp = 0
     for i in remaining:
       if (i in depots and currentNode in depots):
-        tmp = pheromone[currentNode][i] / 1000000 # TODO value?
+        tmp = pheromone[currentNode][i] / 1 # TODO value?
       else:
         tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
-      sumval += tmp
+      if (tmp == 0):
+        sumval += 5e-324
+      else:
+        sumval += tmp
       if (sumval == 0):
         print 'sumval == 0'
 
     for i in remaining:
       if (i in depots and currentNode in depots):
-        tmp = pheromone[currentNode][i] / 1000000 # TODO value?
+        tmp = pheromone[currentNode][i] / 1 # TODO value?
       else:
         tmp = pheromone[currentNode][i] / (graph[currentNode][i] ** beta)
-      if (sumval != 0):
-        prob[i] = (tmp / sumval)
+      if ((tmp/sumval) == 0):
+        prob[i] = 5e-324
       else:
-        prob[i] = 0
+        prob[i] = (tmp / sumval)
 
     s = probfunc(prob)
 
@@ -319,6 +321,18 @@ def addDepots(v, graph, nodes, depots):
   return l
 
 
+def splitTours(bestTour, depots):
+  tour = bestTour[:-1]
+  tmp = 0
+  for i in range(len(tour)):
+    if (tour[i] in depots):
+      if (tmp != i):
+        print tour[tmp:i]
+      tmp = i+1
+  if (tmp != len(tour)):
+    print tour[tmp:]
+
+
 if __name__ == '__main__':
 
   # osm indices (from table ways, column gid)
@@ -326,10 +340,7 @@ if __name__ == '__main__':
   #1313862, 42, 1337]
 
   # example non-osm-nodes
-  nodes = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
-
-  # list of depots
-  depots = []
+  #nodes = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
 
   # matrix with <numberOfNodes> rows and columns and osm-distances as values
   #graph = [ [ getDistance(i,j) for j in nodes ] for i in nodes ]
@@ -344,7 +355,15 @@ if __name__ == '__main__':
   1, 6, 0, 20, 15],[6, 8, 27, 14, 30, 10, 5, 3, 21, 17, 26, 20, 0, 18],[20, 21, 5, 20, 7, 33, 13, 19,
   18, 4, 8, 15, 18, 0]]
 
-  graph = addDepots(len(graph)-1, graph, nodes, depots)
+  # example node list from non-osm-graph
+  nodes = range(len(graph))
+
+  # list of depots
+  depots = []
+
+  # add depots
+  #graph = addDepots(len(graph)-1, graph, nodes, depots)
+  graph = addDepots(3, graph, nodes, depots)
 
   # number of nodes
   numNodes = len(graph)
@@ -356,7 +375,10 @@ if __name__ == '__main__':
   pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ]
 
   # number of ants
-  ants = 10
+  if (numNodes < 10):
+    ants = numNodes
+  else:
+    ants = 10
 
   # list of remaining nodes
   remaining = [ nodes[:] for i in range(ants) ]
@@ -369,7 +391,9 @@ if __name__ == '__main__':
 
   positionAnts(ants, tours, numNodes, remaining)
 
-  for tmp in range(2):
+  print depots
+
+  for tmp in range(10):
     for count in range(1000):
       for i in range(numNodes):
         chooseNext(graph, pheromone, remaining, tours, depots)
@@ -380,3 +404,4 @@ if __name__ == '__main__':
     print 'best tour: ', bestTour
     print 'length of best tour: ', gtl(graph, bestTour)
     print 'length of nnt: ', gtl(graph, nnt(graph, 0))
+    splitTours(bestTour, depots)
