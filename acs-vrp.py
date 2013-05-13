@@ -325,11 +325,11 @@ def splitTours(bestTour, depots):
   for i in range(len(tour)):
     if (tour[i] in depots):
       if (tmp != i):
-        #print 'tour: ', tour[tmp:i]
+        print 'tour: ', tour[tmp:i]
         numTours += 1
       tmp = i + 1
   if (tmp != len(tour)):
-    #print 'tour: ', tour[tmp:]
+    print 'tour: ', tour[tmp:]
     numTours += 1
 
   return numTours
@@ -361,44 +361,50 @@ if __name__ == '__main__':
   # number of vehicles
   v = len(originalgraph)-1
 
-  # add depots
-  graph = addDepots(v, originalgraph)
+  # total length of tour
+  bestTourTotal = float('inf')
 
-  # example node list from non-osm-graph
-  nodes = range(len(graph))
-
-  # list of depots
-  depots = range(v)
-
-  # number of nodes
-  numNodes = len(graph)
-
-  # initial pheromone amount
-  tau0val = tau0(graph)
-
-  # pheromone array
-  pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ]
-
-  # number of ants
-  if (numNodes < 10):
-    ants = numNodes
-  else:
-    ants = 10
-
-  # list of remaining nodes
-  remaining = [ nodes[:] for i in range(ants) ]
-
-  # tours generated
-  tours = [ [] for i in range(ants) ]
-
-  # the best tour
-  bestTour = []
-
-  positionAnts(ants, tours, numNodes, remaining)
-
-  print depots
+  # number of real tours
+  numRealTours = float('inf')
 
   for tmp in range(10):
+
+    # add depots
+    graph = addDepots(v, originalgraph)
+
+    # node list
+    nodes = range(len(graph))
+
+    # list of depots
+    depots = range(v)
+
+    # number of Nodes
+    numNodes = len(graph)
+
+    # initial tau value
+    tau0val = tau0(graph)
+
+    # pheromone values
+    pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ]
+
+    # number of ants
+    if (numNodes < 10):
+      ants = numNodes
+    else:
+      ants = 10
+
+    # remaining nodes
+    remaining = [ nodes[:] for i in range(ants) ]
+
+    # generated tours
+    tours = [ [] for i in range(ants) ]
+
+    # best tour so far
+    bestTour = []
+
+    # position ants on nodes
+    positionAnts(ants, tours, numNodes, remaining)
+
     for count in range(1000):
       for i in range(numNodes):
         chooseNext(graph, pheromone, remaining, tours, depots)
@@ -406,7 +412,10 @@ if __name__ == '__main__':
       globalUpdatingRule(graph, pheromone, bestTour)
       reset(remaining, tours, nodes, ants)
       positionAnts(ants, tours, numNodes, remaining)
-    print 'best tour: ', bestTour
-    print 'length of best tour: ', gtl(graph, bestTour)
     print 'length of nnt: ', gtl(graph, nnt(graph, 0))
-    print 'number of real tours: ', splitTours(bestTour, depots)
+    if (gtl(graph, bestTour) <= bestTourTotal):
+      bestTourTotal = gtl(graph, bestTour)
+    print 'length of best tour: ', bestTourTotal
+    numRealTours = splitTours(bestTour, depots)
+    if (v > numRealTours):
+      v = numRealTours
