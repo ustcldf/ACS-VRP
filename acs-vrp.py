@@ -2,7 +2,7 @@
 
 import math
 import random
-import psycopg2
+#import psycopg2
 
 
 def nnt(graph,startNode):
@@ -251,11 +251,12 @@ def chooseNext(graph, pheromone, remaining, tours, depots, maxCapacity, cap, Q):
 
   ant = 0 # current ant
   if (len(tours[ant]) == numNodes): # all nodes visited
-    for a in tours:
-      if (cap[ant] >= Q[a[0]]):
-        a.append(a[0])
-        cap[ant] -= Q[a[0]]
-      ant += 1
+    None
+  #  for a in tours:
+  #    if (cap[ant] >= Q[a[0]]):
+  #      a.append(a[0])
+  #      cap[ant] -= Q[a[0]]
+  #    ant += 1
   else:
     for a in tours: # for every ant tour
       reachable = []
@@ -368,11 +369,22 @@ def splitTours(bestTour, depots):
   return numTours
 
 
+def adjustTours(tours, depots):
+  # shift list in case the ant started at a customer (ant would have delivered the customer for free)
+  #
+  # tours: list of every tour
+  # depots: list of depots
+
+  for t in tours:
+    t.append(t.pop(0)) # left shift (append first item at end)
+    t.append(t[0])
+
+
 def isFeasible(nodes, depots, tour):
   # checks if a tour visited all nodes
   #
-  # nodes:
-  # depots:
+  # nodes: list of nodes
+  # depots: list of depots
   # tour: list of nodes
   # returns True if feasible, False else
   
@@ -420,9 +432,9 @@ if __name__ == '__main__':
   18, 4, 8, 15, 18, 0]]
 
   # quantity of goods the customer asks for
-  #originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10, 9]
+  originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10, 9]
   #originalQ = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  originalQ = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+  #originalQ = [20, 20, 10, 10, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
 
   # number of vehicles
   v = len(originalgraph)-1
@@ -490,6 +502,7 @@ if __name__ == '__main__':
     for count in range(1000):
       for i in range(numNodes):
         chooseNext(graph, pheromone, remaining, tours, depots, maxCapacity, cap, Q)
+      adjustTours(tours, depots)
       bestTour = checkForBestTour(graph, nodes, depots, tours, bestTour)
       globalUpdatingRule(graph, pheromone, bestTour)
       reset(remaining, tours, nodes, ants, maxCapacity, cap)
