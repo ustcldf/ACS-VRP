@@ -38,10 +38,12 @@ def gtl(graph,tour):
   return length
 
 
-def checkForBestTour(graph, tours, oldBestTour):
+def checkForBestTour(graph, nodes, depots, tours, oldBestTour):
   # Check for new best tour.
   #
   # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
+  # nodes: list of nodes
+  # depots: list of depots
   # tours: list of lists (list of tours).
   # oldBestTour: list of nodes (the best tour so far).
   # returns a list containing the best tour (might be oldBestTour).
@@ -50,6 +52,8 @@ def checkForBestTour(graph, tours, oldBestTour):
   bestT = []
 
   for t in tours:
+    if (not isFeasible(nodes, depots, t)):
+      continue
     length = gtl(graph, t)
     if (length < best):
       best = length
@@ -260,8 +264,15 @@ def chooseNext(graph, pheromone, remaining, tours, depots, maxCapacity, cap, Q):
         #print 'cap[ant]: ', cap[ant]
         #print 'Q[i]: ',Q[i]
         #print 'cap[ant]<=Q[i]: ', cap[ant] >= Q[i]
-        if (cap[ant] >= Q[i]):
+        if (cap[ant] >= Q[i] and Q[i] != 0):
           reachable.append(i)
+      if (not reachable): # reachable is empty
+        for i in remaining[ant]:
+          if (cap[ant] >= Q[i]):
+            reachable.append(i)
+      if (not reachable): 
+        #print 'still empty'
+        continue
       oldPos = a[len(a)-1]
       newPos = stateTransitionRule(graph, pheromone, oldPos, reachable, depots)
       cap[ant] -= Q[newPos]
@@ -336,7 +347,7 @@ def addDepots(v, graph):
 
 
 def splitTours(bestTour, depots):
-  # split bestTour up at depots
+  # split bestTour at depots
   # 
   # bestTour: list containing the nodes of the best tour
   # depots: list of depots
@@ -356,13 +367,33 @@ def splitTours(bestTour, depots):
 
   return numTours
 
-def isFeasible(graph, tour):
+
+def isFeasible(nodes, depots, tour):
   # checks if a tour visited all nodes
   #
-  # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values
+  # nodes:
+  # depots:
   # tour: list of nodes
   # returns True if feasible, False else
-  #TODO implement
+  
+  tmptour = tour[:]
+  tmpnodes = nodes[:]
+
+  # remove depots
+  for i in depots:
+    if (i in tmptour):
+      tmptour.remove(i)
+    if (i in tmpnodes):
+      tmpnodes.remove(i)
+  del tmptour[-1] # delete last node (duplicate of first node)
+
+  #print 'tmptour: ', tmptour
+  #print 'tmpnodes: ', tmpnodes
+
+  # check if every node in tour
+  for i in tmpnodes:
+    if (i not in tmptour):
+      return False
   return True
 
 
@@ -390,7 +421,8 @@ if __name__ == '__main__':
 
   # quantity of goods the customer asks for
   #originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10, 9]
-  originalQ = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  #originalQ = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  originalQ = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
 
   # number of vehicles
   v = len(originalgraph)-1
@@ -427,6 +459,7 @@ if __name__ == '__main__':
       else:
         Q.append(originalQ[i-len(depots)])
 
+    print Q
     # initial tau value
     tau0val = tau0(graph)
 
@@ -454,12 +487,10 @@ if __name__ == '__main__':
     # position ants on nodes
     positionAnts(ants, tours, numNodes, remaining)
 
-    print max(max(originalgraph))
-
     for count in range(1000):
       for i in range(numNodes):
         chooseNext(graph, pheromone, remaining, tours, depots, maxCapacity, cap, Q)
-      bestTour = checkForBestTour(graph, tours, bestTour)
+      bestTour = checkForBestTour(graph, nodes, depots, tours, bestTour)
       globalUpdatingRule(graph, pheromone, bestTour)
       reset(remaining, tours, nodes, ants, maxCapacity, cap)
       positionAnts(ants, tours, numNodes, remaining)
@@ -468,5 +499,8 @@ if __name__ == '__main__':
       bestTourTotal = gtl(graph, bestTour)
     print 'length of best tour: ', bestTourTotal
     numRealTours = splitTours(bestTour, depots)
+    print 'tour: ', bestTour
+    print 'numRealTours: ', numRealTours
+    print 'v: ', v
     if (v > numRealTours):
       v = numRealTours
