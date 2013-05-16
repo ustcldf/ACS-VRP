@@ -2,7 +2,7 @@
 
 import math
 import random
-#import psycopg2
+import psycopg2
 
 
 def nnt(graph,startNode):
@@ -250,39 +250,31 @@ def chooseNext(graph, pheromone, remaining, tours, depots, maxCapacity, cap, Q):
   # Q: quantity of goods the customer asks for
 
   ant = 0 # current ant
-  if (len(tours[ant]) == numNodes): # all nodes visited
-    None
-  #  for a in tours:
-  #    if (cap[ant] >= Q[a[0]]):
-  #      a.append(a[0])
-  #      cap[ant] -= Q[a[0]]
-  #    ant += 1
-  else:
-    for a in tours: # for every ant tour
-      reachable = []
+  for a in tours: # for every ant tour
+    reachable = []
+    for i in remaining[ant]:
+      #print 'node: ',i
+      #print 'cap[ant]: ', cap[ant]
+      #print 'Q[i]: ',Q[i]
+      #print 'cap[ant]<=Q[i]: ', cap[ant] >= Q[i]
+      if (cap[ant] >= Q[i] and Q[i] != 0):
+        reachable.append(i)
+    if (not reachable): # reachable is empty
       for i in remaining[ant]:
-        #print 'node: ',i
-        #print 'cap[ant]: ', cap[ant]
-        #print 'Q[i]: ',Q[i]
-        #print 'cap[ant]<=Q[i]: ', cap[ant] >= Q[i]
-        if (cap[ant] >= Q[i] and Q[i] != 0):
+        if (cap[ant] >= Q[i]):
           reachable.append(i)
-      if (not reachable): # reachable is empty
-        for i in remaining[ant]:
-          if (cap[ant] >= Q[i]):
-            reachable.append(i)
-      if (not reachable): 
-        #print 'still empty'
-        continue
-      oldPos = a[len(a)-1]
-      newPos = stateTransitionRule(graph, pheromone, oldPos, reachable, depots)
-      cap[ant] -= Q[newPos]
-      if (newPos in depots):
-        cap[ant] = maxCapacity
-      localUpdatingRule(pheromone, oldPos, newPos, tau0(graph))
-      a.append(newPos)
-      remaining[ant].remove(newPos)
-      ant += 1
+    if (not reachable): 
+      #print 'still empty'
+      continue
+    oldPos = a[len(a)-1]
+    newPos = stateTransitionRule(graph, pheromone, oldPos, reachable, depots)
+    cap[ant] -= Q[newPos]
+    if (newPos in depots):
+      cap[ant] = maxCapacity
+    localUpdatingRule(pheromone, oldPos, newPos, tau0(graph))
+    a.append(newPos)
+    remaining[ant].remove(newPos)
+    ant += 1
 
 
 def reset(remaining, tours, nodes, ants, maxCapacity, cap):
@@ -308,13 +300,16 @@ def reset(remaining, tours, nodes, ants, maxCapacity, cap):
     cap.append(maxCapacity)
 
 
-def positionAnts(ants, tours, numNodes, remaining):
+def positionAnts(ants, tours, numNodes, remaining, cap, Q, depots):
   # Determine the start nodes of the ants.
   #
   # ants: number of ants.
   # tours: list of tours
   # numNodes: number of nodes.
   # remaining: unvisited nodes
+  # cap: remaining goods of ants
+  # Q: quantity of goods the customer asks for
+  # depots: list of depots
 
   pos = range(numNodes)
   for ant in range(ants):
@@ -322,6 +317,7 @@ def positionAnts(ants, tours, numNodes, remaining):
     tours[ant].append(p)
     remaining[ant].remove(p)
     pos.remove(p)
+    cap[ant] -= Q[p] # if ant starts on customer node, substract quantity the customer asks for
 
 
 def addDepots(v, graph):
@@ -370,14 +366,15 @@ def splitTours(bestTour, depots):
 
 
 def adjustTours(tours, depots):
-  # shift list in case the ant started at a customer (ant would have delivered the customer for free)
+  # shift list so that tour starts with depot
   #
   # tours: list of every tour
   # depots: list of depots
 
   for t in tours:
-    t.append(t.pop(0)) # left shift (append first item at end)
-    t.append(t[0])
+    while (t[0] not in depots):
+      t.append(t.pop(0)) # left shift (append first item at end)
+    t.append(t[0]) # append first node at end -> round trip
 
 
 def isFeasible(nodes, depots, tour):
@@ -398,9 +395,6 @@ def isFeasible(nodes, depots, tour):
     if (i in tmpnodes):
       tmpnodes.remove(i)
   del tmptour[-1] # delete last node (duplicate of first node)
-
-  #print 'tmptour: ', tmptour
-  #print 'tmpnodes: ', tmpnodes
 
   # check if every node in tour
   for i in tmpnodes:
@@ -433,35 +427,20 @@ if __name__ == '__main__':
 
   # quantity of goods the customer asks for
   originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10, 9]
-  #originalQ = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  #originalQ = [20, 20, 10, 10, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+  #originalQ = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+  #originalQ = [3, 4, 9, 8, 3, 1, 2, 8, 6, 3, 8, 8, 7, 2]
 
-  # number of vehicles
-  v = len(originalgraph)-1
-
-  # total length of tour
-  bestTourTotal = float('inf')
-
-  # number of real tours
-  numRealTours = float('inf')
-
-  # max capacity of vehicles
-  maxCapacity = 20
-
+  v = len(originalgraph)-1 # number of vehicles
+  bestTourTotal = float('inf') # total length of tour
+  numRealTours = float('inf') # number of real tours
+  maxCapacity = 20 # max capacity of vehicles
 
   for tmp in range(10):
 
-    # add depots
-    graph = addDepots(v, originalgraph)
-
-    # node list
-    nodes = range(len(graph))
-
-    # list of depots
-    depots = range(v)
-
-    # number of Nodes
-    numNodes = len(graph)
+    graph = addDepots(v, originalgraph) # add depots
+    nodes = range(len(graph)) # node list
+    depots = range(v) # list of depots
+    numNodes = len(graph) # number of Nodes
 
     # quantity of goods the customer asks for
     Q = []
@@ -471,12 +450,8 @@ if __name__ == '__main__':
       else:
         Q.append(originalQ[i-len(depots)])
 
-    print Q
-    # initial tau value
-    tau0val = tau0(graph)
-
-    # pheromone values
-    pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ]
+    tau0val = tau0(graph) # initial tau value
+    pheromone = [ [ tau0val for i in range(numNodes) ] for j in range(numNodes) ] # pheromone values
 
     # number of ants
     if (numNodes < 10):
@@ -484,36 +459,27 @@ if __name__ == '__main__':
     else:
       ants = 10
 
-    # remaining nodes
-    remaining = [ nodes[:] for i in range(ants) ]
-
-    # generated tours
-    tours = [ [] for i in range(ants) ]
-
-    # remaining goods of ants
-    cap = [ maxCapacity for i in range(ants) ]
-
-    # best tour so far
-    bestTour = []
-
-    # position ants on nodes
-    positionAnts(ants, tours, numNodes, remaining)
+    remaining = [ nodes[:] for i in range(ants) ] # remaining nodes
+    tours = [ [] for i in range(ants) ] # generated tours
+    cap = [ maxCapacity for i in range(ants) ] # remaining goods of ants
+    bestTour = [] # best tour so far
+    positionAnts(ants, tours, numNodes, remaining, cap, Q, depots) # position ants on nodes
 
     for count in range(1000):
       for i in range(numNodes):
         chooseNext(graph, pheromone, remaining, tours, depots, maxCapacity, cap, Q)
-      adjustTours(tours, depots)
+      adjustTours(tours, depots) # shift nodes so that depot is at beginning/end
       bestTour = checkForBestTour(graph, nodes, depots, tours, bestTour)
       globalUpdatingRule(graph, pheromone, bestTour)
       reset(remaining, tours, nodes, ants, maxCapacity, cap)
-      positionAnts(ants, tours, numNodes, remaining)
+      positionAnts(ants, tours, numNodes, remaining, cap, Q, depots) # repostition ants on nodes
     print 'length of nnt: ', gtl(graph, nnt(graph, 0))
     if (gtl(graph, bestTour) <= bestTourTotal):
       bestTourTotal = gtl(graph, bestTour)
     print 'length of best tour: ', bestTourTotal
-    numRealTours = splitTours(bestTour, depots)
-    print 'tour: ', bestTour
+    numRealTours = splitTours(bestTour, depots) # split tour into "real" tours
     print 'numRealTours: ', numRealTours
-    print 'v: ', v
-    if (v > numRealTours):
+    print 'vehicles: ', v
+    print 'whole tour: ', bestTour
+    if (v > numRealTours): # reduce number of vehicles if possible
       v = numRealTours
