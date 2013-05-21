@@ -425,7 +425,7 @@ if __name__ == '__main__':
   #1, 6, 0, 20, 15],[6, 8, 27, 14, 30, 10, 5, 3, 21, 17, 26, 20, 0, 18],[20, 21, 5, 20, 7, 33, 13, 19,
   #18, 4, 8, 15, 18, 0]]
 
-  originalgraph = [ [0, 2, 2, 4, 5], [2, 0, 8, 5, 6], [2, 8, 0, 3, 4], [4, 5, 3, 0, 10], [5, 6, 4, 10, 0] ]
+  originalgraph = [ [0, 2, 2, 4, 5], [2, 0, 8, 5, 6], [2, 8, 0, 12, 4], [4, 5, 12, 0, 10], [5, 6, 4, 10, 0] ]
 
   # quantity of goods the customer asks for
   #originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10, 9]
@@ -436,7 +436,7 @@ if __name__ == '__main__':
   v = len(originalgraph)-1 # number of vehicles
   bestTourTotal = float('inf') # total length of tour
   numRealTours = float('inf') # number of real tours
-  maxCapacity = 20 # max capacity of vehicles
+  maxCapacity = 200 # max capacity of vehicles
 
   for tmp in range(10):
 
