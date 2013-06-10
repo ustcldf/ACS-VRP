@@ -440,7 +440,6 @@ def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCap
       globalUpdatingRule(graph, pheromone, bestTour)
       reset(remaining, tours, nodes, ants, maxCapacity, cap)
       positionAnts(ants, tours, numNodes, remaining, cap, Q, depots) # repostition ants on nodes
-    print 'length of nnt: ', gtl(graph, nnt(graph, 0))
     if (gtl(graph, bestTour) <= bestTourTotal):
       bestTourTotal = gtl(graph, bestTour)
     print 'length of best tour: ', bestTourTotal
