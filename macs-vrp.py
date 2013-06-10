@@ -3,6 +3,7 @@
 import math
 import random
 #import psycopg2
+from multiprocessing import Process, Value, Lock
 
 
 def nnt(graph,startNode):
@@ -403,6 +404,16 @@ def isFeasible(nodes, depots, tour):
   return True
 
 def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCapacity):
+  # calculate tours
+  #
+  # nodes: list of nodes
+  # originalgraph: the original graph without depots (split up node 0)
+  # originalQ: quantity of goods the customers ask for (without depots)
+  # v: number of vehicles
+  # bestTourTotal: total length of tour
+  # numRealTours: number of real tours
+  # maxCapacity: maximum capacity of vehicles
+
   for tmp in range(10):
     graph = addDepots(v, originalgraph) # add depots
     nodes = range(len(graph)) # node list
@@ -447,8 +458,6 @@ def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCap
     print 'numRealTours: ', numRealTours
     print 'vehicles: ', v
     print 'whole tour: ', bestTour
-    if (v > numRealTours): # reduce number of vehicles if possible
-      v = numRealTours
 
 if __name__ == '__main__':
 
@@ -484,5 +493,8 @@ if __name__ == '__main__':
   bestTourTotal = float('inf') # total length of tour
   numRealTours = float('inf') # number of real tours
   maxCapacity = 20 # max capacity of vehicles
+
+  best = Value('i', 0) # length of best tour
+  lock = Lock()
 
   macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCapacity)
