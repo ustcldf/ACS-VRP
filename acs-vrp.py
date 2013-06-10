@@ -410,33 +410,33 @@ if __name__ == '__main__':
   #1313862, 42, 1337]
 
   # example non-osm-nodes
-  #nodes = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+  nodes = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
 
   # matrix with <numberOfNodes> rows and columns and osm-distances as values
   #graph = [ [ getDistance(i,j) for j in nodes ] for i in nodes ]
 
   # example non-osm-graph
-  #originalgraph = [[0, 20, 14, 10, 2, 7, 3, 20, 3, 40, 1, 22, 6, 20],[20, 0, 2, 5, 4, 33, 10, 30, 3, 12, 42,
-  #19, 8, 21],[14, 2, 0, 10, 3, 22, 10, 3, 2, 33, 23, 7, 27, 5], [10, 5, 10, 0, 6, 20, 20, 11, 21, 21,
-  #73, 6, 14, 20],[2, 4, 3, 6, 0, 1, 2, 40, 12, 18, 17, 25, 30, 7], [7, 33, 22, 20, 1, 0, 40, 5, 3, 2,
-  #3, 11, 10, 33],[3, 10, 10, 20, 2, 40, 0, 8, 4, 7, 8, 24, 5, 13], [20, 30, 3, 11, 40, 5, 8, 0, 9, 11,
-  #4, 12, 3, 19],[3, 3, 2, 21, 12, 3, 4, 9, 0, 12, 42, 33, 21, 18], [40, 12, 33, 21, 18, 2, 7, 11, 12,
-  #0, 6, 3, 17, 4],[1, 42, 23, 73, 17, 3, 8, 4, 42, 6, 0, 6, 26, 8], [22, 19, 7, 6, 25, 11, 24, 12, 33,
-  #1, 6, 0, 20, 15],[6, 8, 27, 14, 30, 10, 5, 3, 21, 17, 26, 20, 0, 18],[20, 21, 5, 20, 7, 33, 13, 19,
-  #18, 4, 8, 15, 18, 0]]
+  originalgraph = [[0, 20, 14, 10, 2, 7, 3, 20, 3, 40, 1, 22, 6, 20],[20, 0, 2, 5, 4, 33, 10, 30, 3, 12, 42,
+  19, 8, 21],[14, 2, 0, 10, 3, 22, 10, 3, 2, 33, 23, 7, 27, 5], [10, 5, 10, 0, 6, 20, 20, 11, 21, 21,
+  73, 6, 14, 20],[2, 4, 3, 6, 0, 1, 2, 40, 12, 18, 17, 25, 30, 7], [7, 33, 22, 20, 1, 0, 40, 5, 3, 2,
+  3, 11, 10, 33],[3, 10, 10, 20, 2, 40, 0, 8, 4, 7, 8, 24, 5, 13], [20, 30, 3, 11, 40, 5, 8, 0, 9, 11,
+  4, 12, 3, 19],[3, 3, 2, 21, 12, 3, 4, 9, 0, 12, 42, 33, 21, 18], [40, 12, 33, 21, 18, 2, 7, 11, 12,
+  0, 6, 3, 17, 4],[1, 42, 23, 73, 17, 3, 8, 4, 42, 6, 0, 6, 26, 8], [22, 19, 7, 6, 25, 11, 24, 12, 33,
+  1, 6, 0, 20, 15],[6, 8, 27, 14, 30, 10, 5, 3, 21, 17, 26, 20, 0, 18],[20, 21, 5, 20, 7, 33, 13, 19,
+  18, 4, 8, 15, 18, 0]]
 
-  originalgraph = [ [0, 2, 2, 4, 5], [2, 0, 8, 5, 6], [2, 8, 0, 12, 4], [4, 5, 12, 0, 10], [5, 6, 4, 10, 0] ]
+  #originalgraph = [ [0, 2, 2, 4, 5], [2, 0, 8, 5, 6], [2, 8, 0, 12, 4], [4, 5, 12, 0, 10], [5, 6, 4, 10, 0] ]
 
   # quantity of goods the customer asks for
-  #originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10, 9]
+  originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10, 9]
   #originalQ = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
   #originalQ = [3, 4, 9, 8, 3, 1, 2, 8, 6, 3, 8, 8, 7, 2]
-  originalQ = [8, 10, 19, 3]
+  #originalQ = [8, 10, 19, 3]
 
   v = len(originalgraph)-1 # number of vehicles
   bestTourTotal = float('inf') # total length of tour
   numRealTours = float('inf') # number of real tours
-  maxCapacity = 200 # max capacity of vehicles
+  maxCapacity = 20 # max capacity of vehicles
 
   for tmp in range(10):
 
@@ -476,7 +476,6 @@ if __name__ == '__main__':
       globalUpdatingRule(graph, pheromone, bestTour)
       reset(remaining, tours, nodes, ants, maxCapacity, cap)
       positionAnts(ants, tours, numNodes, remaining, cap, Q, depots) # repostition ants on nodes
-    print 'length of nnt: ', gtl(graph, nnt(graph, 0))
     if (gtl(graph, bestTour) <= bestTourTotal):
       bestTourTotal = gtl(graph, bestTour)
     print 'length of best tour: ', bestTourTotal
