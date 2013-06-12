@@ -3,7 +3,7 @@
 import math
 import random
 #import psycopg2
-from multiprocessing import Process, Value, Lock
+from multiprocessing import Process, Value, Lock, Array
 
 
 def nnt(graph,startNode):
@@ -48,6 +48,8 @@ def checkForBestTour(graph, nodes, depots, tours, oldBestTour):
   # tours: list of lists (list of tours).
   # oldBestTour: list of nodes (the best tour so far).
   # returns a list containing the best tour (might be oldBestTour).
+
+  # TODO oldBestTour ?! processes can't see each others tours
 
   best = float('inf')
   bestT = []
@@ -403,7 +405,7 @@ def isFeasible(nodes, depots, tour):
       return False
   return True
 
-def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCapacity, procID, best, found, lock):
+def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCapacity, procID, globalBestTour, best, found, lock):
   # calculate tours
   #
   # nodes: list of nodes
@@ -516,11 +518,12 @@ if __name__ == '__main__':
   best = Value('i', 999999) # length of best tour TODO inf value
   found = Value('i', 0) # flag to signal process 0 that process 1 has found a new best tour
   lock = Lock()
+  globalBestTour = Array('i', [])
 
   procLst = [ Process(target=macs, 
-                      args=(nodes, originalgraph, originalQ, 7-i, 
+                      args=(nodes, originalgraph, originalQ, v-i, 
                             bestTourTotal, numRealTours, 
-                            maxCapacity, i, best, found,
+                            maxCapacity, i, globalBestTour, best, found,
                             lock)) for i in range(2) ]
 
   for p in procLst: p.start()
