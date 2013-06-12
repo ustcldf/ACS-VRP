@@ -344,7 +344,7 @@ def addDepots(v, graph):
   return l
 
 
-def splitTours(bestTour, depots):
+def splitTours(bestTour, depots, procID):
   # split bestTour at depots
   # 
   # bestTour: list containing the nodes of the best tour
@@ -356,11 +356,11 @@ def splitTours(bestTour, depots):
   for i in range(len(tour)):
     if (tour[i] in depots):
       if (tmp != i):
-        print 'tour: ', tour[tmp:i]
+        print procID, ' tour: ', tour[tmp:i]
         numTours += 1
       tmp = i + 1
   if (tmp != len(tour)):
-    print 'tour: ', tour[tmp:]
+    print procID, ' tour: ', tour[tmp:]
     numTours += 1
 
   return numTours
@@ -403,7 +403,7 @@ def isFeasible(nodes, depots, tour):
       return False
   return True
 
-def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCapacity):
+def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCapacity, procID, best, found, lock):
   # calculate tours
   #
   # nodes: list of nodes
@@ -413,8 +413,9 @@ def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCap
   # bestTourTotal: total length of tour
   # numRealTours: number of real tours
   # maxCapacity: maximum capacity of vehicles
+  # TODO parameters
 
-  for tmp in range(10):
+  for tmp in range(10): # TODO while(1==1)?
     graph = addDepots(v, originalgraph) # add depots
     nodes = range(len(graph)) # node list
     depots = range(v) # list of depots
@@ -453,11 +454,29 @@ def macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCap
       positionAnts(ants, tours, numNodes, remaining, cap, Q, depots) # repostition ants on nodes
     if (gtl(graph, bestTour) <= bestTourTotal):
       bestTourTotal = gtl(graph, bestTour)
-    print 'length of best tour: ', bestTourTotal
-    numRealTours = splitTours(bestTour, depots) # split tour into "real" tours
-    print 'numRealTours: ', numRealTours
-    print 'vehicles: ', v
-    print 'whole tour: ', bestTour
+    if (bestTourTotal <= best.value):
+      print procID, ' new best tour'
+      lock.acquire()
+      best.value = bestTourTotal
+      lock.release()
+      if (procID == 1):
+        print procID, ' found = 1; v -= 1'
+        lock.acquire()
+        found.value = 1
+        lock.release()
+        v -= 1
+    if (found.value == 1 and procID == 0):
+      print procID, ' found == 1; found = 0; v -= 1'
+      lock.acquire()
+      found.value = 0
+      lock.release()
+      v -= 1
+      
+    print procID, ' length of best tour: ', bestTourTotal
+    numRealTours = splitTours(bestTour, depots, procID) # split tour into "real" tours
+    print procID, ' numRealTours: ', numRealTours
+    print procID, ' vehicles: ', v
+    print procID, ' whole tour: ', bestTour
 
 if __name__ == '__main__':
 
@@ -494,7 +513,15 @@ if __name__ == '__main__':
   numRealTours = float('inf') # number of real tours
   maxCapacity = 20 # max capacity of vehicles
 
-  best = Value('i', 0) # length of best tour
+  best = Value('i', 999999) # length of best tour TODO inf value
+  found = Value('i', 0) # flag to signal process 0 that process 1 has found a new best tour
   lock = Lock()
 
-  macs(nodes, originalgraph, originalQ, v, bestTourTotal, numRealTours, maxCapacity)
+  procLst = [ Process(target=macs, 
+                      args=(nodes, originalgraph, originalQ, 7-i, 
+                            bestTourTotal, numRealTours, 
+                            maxCapacity, i, best, found,
+                            lock)) for i in range(2) ]
+
+  for p in procLst: p.start()
+  for p in procLst: p.join()
