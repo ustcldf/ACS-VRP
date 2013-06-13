@@ -38,12 +38,11 @@ def gtl(graph,tour):
   return length
 
 
-def checkForBestTour(graph, nodes, depots, tours, oldBestTour):
+def checkForBestTour(graph, nodes, tours, oldBestTour):
   # Check for new best tour.
   #
   # graph: 2D array with numberOfNodes rows and columns and the weight of the edges as values.
   # nodes: list of nodes
-  # depots: list of depots
   # tours: list of lists (list of tours).
   # oldBestTour: list of nodes (the best tour so far).
   # returns a list containing the best tour (might be oldBestTour).
@@ -52,7 +51,7 @@ def checkForBestTour(graph, nodes, depots, tours, oldBestTour):
   bestT = []
 
   for t in tours:
-    if (not isFeasible(nodes, depots, t)):
+    if (not isFeasible(nodes, t)):
       continue
     length = gtl(graph, t)
     if (length < best):
@@ -377,28 +376,16 @@ def adjustTours(tours, depots):
     t.append(t[0]) # append first node at end -> round trip
 
 
-def isFeasible(nodes, depots, tour):
+def isFeasible(nodes, tour):
   # checks if a tour visited all nodes
   #
   # nodes: list of nodes
-  # depots: list of depots
   # tour: list of nodes
   # returns True if feasible, False else
   
-  tmptour = tour[:]
-  tmpnodes = nodes[:]
-
-  # remove depots
-  for i in depots:
-    if (i in tmptour):
-      tmptour.remove(i)
-    if (i in tmpnodes):
-      tmpnodes.remove(i)
-  del tmptour[-1] # delete last node (duplicate of first node)
-
   # check if every node in tour
-  for i in tmpnodes:
-    if (i not in tmptour):
+  for i in nodes:
+    if (i not in tour):
       return False
   return True
 
@@ -472,10 +459,12 @@ if __name__ == '__main__':
       for i in range(numNodes):
         chooseNext(graph, pheromone, remaining, tours, depots, maxCapacity, cap, Q)
       adjustTours(tours, depots) # shift nodes so that depot is at beginning/end
-      bestTour = checkForBestTour(graph, nodes, depots, tours, bestTour)
+      bestTour = checkForBestTour(graph, nodes, tours, bestTour)
       globalUpdatingRule(graph, pheromone, bestTour)
       reset(remaining, tours, nodes, ants, maxCapacity, cap)
       positionAnts(ants, tours, numNodes, remaining, cap, Q, depots) # repostition ants on nodes
+    if (not bestTour): # bestTour empty (too few vehicles?)
+      continue
     if (gtl(graph, bestTour) <= bestTourTotal):
       bestTourTotal = gtl(graph, bestTour)
     print 'length of best tour: ', bestTourTotal
