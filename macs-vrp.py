@@ -503,9 +503,9 @@ if __name__ == '__main__':
   #originalgraph = [ [0, 2, 2, 4, 5], [2, 0, 8, 5, 6], [2, 8, 0, 12, 4], [4, 5, 12, 0, 10], [5, 6, 4, 10, 0] ]
 
   # quantity of goods the customer asks for
-  originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10, 9]
-  #originalQ = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
-  #originalQ = [3, 4, 9, 8, 3, 1, 2, 8, 6, 3, 8, 8, 7, 2]
+  originalQ = [2, 10, 5, 18, 7, 8, 1, 16, 4, 18, 13, 12, 10]
+  #originalQ = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+  #originalQ = [3, 4, 9, 8, 3, 1, 2, 8, 6, 3, 8, 8, 7]
   #originalQ = [8, 10, 19, 3]
 
   v = len(originalgraph)-1 # number of vehicles
